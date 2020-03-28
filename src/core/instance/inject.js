@@ -13,6 +13,7 @@ export function initProvide (vm: Component) {
   }
 }
 
+// 拿到注入数组与其对应的值，然后将注入数组的每一项设置成响应式的数据
 export function initInjections (vm: Component) {
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
@@ -50,6 +51,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
       if (key === '__ob__') continue
       const provideKey = inject[key].from
       let source = vm
+      // 一直向父级上寻找，直到找到提供这个注入key值父级，然后拿到key值对应的属性值
       while (source) {
         if (source._provided && hasOwn(source._provided, provideKey)) {
           result[key] = source._provided[provideKey]

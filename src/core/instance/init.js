@@ -13,7 +13,9 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
+  // 设置vue实例的原型方法_init，初始化vue实例。
   Vue.prototype._init = function (options?: Object) {
+    // 将生成的vue实例赋值为vm变量，并且设置其_uid
     const vm: Component = this
     // a uid
     vm._uid = uid++
@@ -23,16 +25,20 @@ export function initMixin (Vue: Class<Component>) {
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
       endTag = `vue-perf-end:${vm._uid}`
+      // 标记vue实例初始化开始时间，方便后面使用
       mark(startTag)
     }
 
     // a flag to avoid this being observed
+    // 防止当前vue实例对象被当做观察对象
     vm._isVue = true
     // merge options
+    // 若传入参数是个组件
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
+      // 初始化内置组件，并进行优化
       initInternalComponent(vm, options)
     } else {
       vm.$options = mergeOptions(
@@ -49,10 +55,15 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
+    // 初始化lifecycle，初始化$parent,$root,$refs,isMounted,isDestroyed之类的
     initLifecycle(vm)
+    // 初始化事件，触发子级组件attach到父级的事件，调用监听函数
     initEvents(vm)
+    // 初始化渲染器，渲染组件内slot，并设置$listener,$attr为响应式的（值为父级的listener，attr）
     initRender(vm)
+    // 调用钩子函数beforeCreate，到这里vue实例初始化的准备工作完成
     callHook(vm, 'beforeCreate')
+    // 拿到注入数组与其对应的值，然后将注入数组的每一项设置成响应式的数据
     initInjections(vm) // resolve injections before data/props
     initState(vm)
     initProvide(vm) // resolve provide after data/props
