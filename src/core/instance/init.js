@@ -63,19 +63,24 @@ export function initMixin (Vue: Class<Component>) {
     initRender(vm)
     // 调用钩子函数beforeCreate，到这里vue实例初始化的准备工作完成
     callHook(vm, 'beforeCreate')
-    // 拿到注入数组与其对应的值，然后将注入数组的每一项设置成响应式的数据
+    // 拿到注入数组与其对应的值，然后将注入数组的每一项设置成响应式的数据,inject数据来自祖先级的_provide
     initInjections(vm) // resolve injections before data/props
+    // 接下来，总的来说就是初始化组件的props, methods, data, watch, computed这些属性
     initState(vm)
+    // 初始化当前vm的_provide属性，方便给子组件调用
     initProvide(vm) // resolve provide after data/props
+    // 调用vm的created钩子函数
     callHook(vm, 'created')
 
     /* istanbul ignore if */
+    // 输出vue实例初始化花了多少时间
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       vm._name = formatComponentName(vm, false)
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
+    // 若传入了el属性，则调用$mount函数开始渲染模板
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }

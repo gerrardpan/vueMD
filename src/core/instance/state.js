@@ -46,8 +46,10 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 }
 
 export function initState (vm: Component) {
+  // 初始化vm的watcher
   vm._watchers = []
   const opts = vm.$options
+  // 接下来初始化组件的props，methods，data
   if (opts.props) initProps(vm, opts.props)
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
@@ -60,7 +62,10 @@ export function initState (vm: Component) {
     initWatch(vm, opts.watch)
   }
 }
-
+/* 简单来说就是
+  1.拿到所有propskey值，然后缓存到一个数组，下次访问的时候使用数组而不是对象key值枚举
+  2.拿到key值对应的props值，然后将其设置成响应式的
+*/
 function initProps (vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {}
   const props = vm._props = {}
@@ -108,7 +113,13 @@ function initProps (vm: Component, propsOptions: Object) {
   }
   toggleObserving(true)
 }
-
+/**
+ * 1.判断是否data属性是个函数，然后根据是函数还是object拿到data数据
+ * 2.判断data的key值跟method是否有同名的，若有则发出警告，data的优先级高，会提示method的函数名已经被定义为data属性了
+ * 3.判断data的key值跟props是否有同名的,同上，但props优先
+ * 4.最后以data为参数调用observe服务观察整个data
+ * @param {*} vm 
+ */
 function initData (vm: Component) {
   let data = vm.$options.data
   data = vm._data = typeof data === 'function'
@@ -206,7 +217,14 @@ function initComputed (vm: Component, computed: Object) {
     }
   }
 }
-
+/**
+ * 1.设置computed属性，先判断computed属性是函数还是对象，然后生成一个代理对象sharedPropertyDefinition（包含getter，setter）
+ * 2.若属性值是函数时，则从新将setter设置成一个函数，该函数会在computed属性被set值的时候被调用，然后发出警告（该computed属性没有setter函数）
+ * 3.最后调用defineProperty函数，传入vm，key以及生成的代理对象sharedPropertyDefinition
+ * @param {*} target 
+ * @param {*} key 
+ * @param {*} userDef 
+ */
 export function defineComputed (
   target: any,
   key: string,
@@ -237,7 +255,10 @@ export function defineComputed (
   }
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
-
+/**
+ * 1.computed的getter调用的时候，到vm的computedWaterche取到watcher，然后会判断是否是dirty的，所是则进行计算一次值，返回
+ * @param {*} key 
+ */
 function createComputedGetter (key) {
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
@@ -259,6 +280,14 @@ function createGetterInvoker(fn) {
   }
 }
 
+/**
+ * 1.先判断methods对象的属性值是否都是function类型的，若不是则发出警告
+ * 2.若已有同名的props，警告
+ * 3.若是预留的函数名，警告
+ * 4.最后调用bind函数，传入vm，将函数this绑定为vm
+ * @param {*} vm 
+ * @param {*} methods 
+ */
 function initMethods (vm: Component, methods: Object) {
   const props = vm.$options.props
   for (const key in methods) {

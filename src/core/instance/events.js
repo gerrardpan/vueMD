@@ -52,6 +52,7 @@ export function updateComponentListeners (
 
 export function eventsMixin (Vue: Class<Component>) {
   const hookRE = /^hook:/
+  // 将传入的fn加入传入的event事件回调函数列表
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {
     const vm: Component = this
     if (Array.isArray(event)) {
@@ -69,6 +70,7 @@ export function eventsMixin (Vue: Class<Component>) {
     return vm
   }
 
+  // 只执行一次的事件回调，调用$on将fn加入event的回调函数列表，执行一次后调用$off将其从列表里删除
   Vue.prototype.$once = function (event: string, fn: Function): Component {
     const vm: Component = this
     function on () {
@@ -80,6 +82,7 @@ export function eventsMixin (Vue: Class<Component>) {
     return vm
   }
 
+  // 从给定事件（event）的回调函数列表里删除传入的fn
   Vue.prototype.$off = function (event?: string | Array<string>, fn?: Function): Component {
     const vm: Component = this
     // all
